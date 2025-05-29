@@ -1,7 +1,7 @@
 """
 gateway.py
 ----------
-Contains the main AegisGateway class that orchestrates the flow of data
+Contains the main ArgusGateway class that orchestrates the flow of data
 through the different layers of the security gateway. Correctly handles
 structured dictionary responses from the L2 guard handler.
 
@@ -17,78 +17,53 @@ import logging
 import layer1_filters
 import primary_llm_mock
 import guard_llm_handler
-import config # Import config to access violation reasons if needed for messages
+import config
 
 # Configure basic logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - [%(module)s] - %(message)s')
 
-class AegisGateway:
-    """
-    The main class orchestrating the AI security gateway logic.
-    """
+class ArgusGateway:
+    """The main class orchestrating the AI security gateway logic."""
 
     def __init__(self):
-        """
-        Initializes the AegisGateway.
-        """
-        logging.info("AegisGateway initialized.")
+        logging.info("ArgusGateway initialized.")
 
-    def _trigger_action_protocol(self, violation_type: str, reason: str = "L1 Violation"):
-        """
-        Handles the blocking action and logs reinforcement simulation.
-
-        Args:
-            violation_type: Description of the violation (e.g., "L1 Input", "L1 Output", "L2").
-            reason: The specific reason code or description (e.g., "PII_DETECTED").
-        """
-        logging.warning(f"{violation_type} Violation detected. Reason: {reason}. Blocking response/prompt.")
-        # REQ-ACT-01: Simulate sending reinforcement prompt (log message)
-        logging.info(f"[REINFORCE] Simulated reinforcement prompt sent to primary LLM regarding {reason}.")
-        # Return the user-facing message
-        return f"[Aegis] {violation_type} blocked due to policy violation ({reason})."
-
+    def _trigger_action_protocol(self, violation_type: str, detailed_reason: str):
+        """Handles the blocking action and logs reinforcement simulation."""
+        logging.warning(f"{violation_type} Violation detected. Reason: {detailed_reason}. Blocking.")
+        logging.info(f"[REINFORCE] Simulated reinforcement prompt sent regarding {detailed_reason}.")
+        return f"[Argus] {violation_type} blocked due to policy violation ({detailed_reason})."
 
     def process_prompt(self, user_prompt: str) -> str:
-        """
-        Processes a user prompt through the security gateway layers.
-
-        Args:
-            user_prompt: The raw input string from the user.
-
-        Returns:
-            A string containing either the final LLM response (if safe)
-            or a warning/error message if blocked by any layer.
-        """
+        """Processes a user prompt through the security gateway layers."""
         logging.info(f"Processing prompt: '{user_prompt[:100]}...'")
 
-        # --- Layer 1 Input Check ---
+        # Layer 1 Input Check
         logging.debug("Applying Layer 1 input filters...")
         if layer1_filters.check_input_filters(user_prompt):
             return self._trigger_action_protocol("Input", "L1 Filter Violation")
         logging.info("L1 Input Check Passed.")
 
-        # --- Primary LLM Interaction ---
+        # Primary LLM Interaction
         logging.debug("Getting response from Primary LLM (Mock)...")
         primary_response = primary_llm_mock.get_llm_response(user_prompt)
         logging.info(f"Primary LLM (Mock) response received: '{primary_response[:100]}...'")
 
-        # --- Layer 1 Output Check ---
+        # Layer 1 Output Check
         logging.debug("Applying Layer 1 output filters...")
         if layer1_filters.check_output_filters(primary_response):
             return self._trigger_action_protocol("Response", "L1 Filter Violation")
         logging.info("L1 Output Check Passed.")
 
-        # --- Layer 2 Guard LLM Analysis ---
+        # Layer 2 Guard LLM Analysis
         logging.debug("Sending response to Guard LLM (L2) for analysis...")
-        # IMPROVED: Pass user_prompt to the handler for contextual analysis
         l2_analysis_result = guard_llm_handler.analyze_response_with_guard(
-            user_prompt=user_prompt, # Pass the user prompt context
+            user_prompt=user_prompt,
             response_text=primary_response
         )
         logging.debug(f"L2 analysis result received: {l2_analysis_result}")
 
-        # --- Final Decision (Handling Dictionary Response) ---
-        # (This logic remains the same as the previous improved version)
+        # Final Decision
         if l2_analysis_result.get('status') == 'success':
             decision = l2_analysis_result.get('decision')
             reason = l2_analysis_result.get('reason') or "Unknown Reason"
@@ -103,12 +78,12 @@ class AegisGateway:
         else:
             error_reason = l2_analysis_result.get('reason', 'Unknown L2 Error')
             logging.error(f"L2 Guard LLM analysis resulted in an ERROR: {error_reason}. Blocking response as a precaution.")
-            return f"[Aegis] Response blocked due to an error during security analysis ({error_reason})."
+            return f"[Argus] Response blocked due to an error during security analysis ({error_reason})."
 
 # Example usage (for testing the gateway class directly)
 if __name__ == "__main__":
-    print("--- Testing AegisGateway (Improved) ---")
-    gateway = AegisGateway()
+    print("--- Testing ArgusGateway (Improved) ---")
+    gateway = ArgusGateway()
 
     # Using test prefixes for deterministic mock responses where needed
     test_prompts = [
@@ -124,12 +99,12 @@ if __name__ == "__main__":
     for prompt in test_prompts:
         print(f"\n>>> User: {prompt}")
         final_output = gateway.process_prompt(prompt)
-        print(f"<<< Aegis: {final_output}") # Output message will now include reason
+        print(f"<<< Argus: {final_output}") # Output message will now include reason
 
     # Example of testing a prompt that *doesn't* have a TEST prefix
     print(f"\n>>> User: Explain photosynthesis.") # Should be safe by keyword logic
     final_output = gateway.process_prompt("Explain photosynthesis.")
-    print(f"<<< Aegis: {final_output}")
+    print(f"<<< Argus: {final_output}")
 
 
     # Test case for Guard LLM error (requires handler to be in error state, e.g., no API key)
@@ -137,6 +112,6 @@ if __name__ == "__main__":
     # print("\n--- Testing Guard LLM Error Handling ---")
     # print(">>> User: Test prompt for L2 error")
     # final_output = gateway.process_prompt("Test prompt for L2 error") # Mock will return generic for this
-    # print(f"<<< Aegis: {final_output}")
+    # print(f"<<< Argus: {final_output}")
 
     print("\n--- Test Complete ---")

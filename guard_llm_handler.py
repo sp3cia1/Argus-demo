@@ -9,9 +9,9 @@ Fulfills PRD requirements: REQ-L2-01 to REQ-L2-05, incorporating robustness impr
 """
 
 import logging
-import json # Import the json library for parsing
+import json
 from openai import OpenAI, APIConnectionError, AuthenticationError, RateLimitError, APIStatusError
-import config # Assuming config.py contains API keys, prompts, model names, etc.
+import config
 
 # Configure basic logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -33,22 +33,8 @@ else:
     logging.error("OpenRouter API Key not found in configuration. Guard LLM handler will be disabled.")
 
 
-# REQ-L2-01: Implement function analyze_response_with_guard(response)
 def analyze_response_with_guard(user_prompt: str, response_text: str) -> dict:
-    """
-    Analyzes the primary LLM's response using the Guard LLM via OpenRouter,
-    considering the context of the user's prompt.
-
-    Args:
-        user_prompt: The original prompt text from the user.
-        response_text: The text response from the primary LLM.
-
-    Returns:
-        A dictionary containing the analysis result:
-        {'status': 'success', 'decision': 'CLEAN', 'reason': None}
-        {'status': 'success', 'decision': 'VIOLATION', 'reason': 'REASON_CODE'}
-        {'status': 'error', 'decision': 'ERROR', 'reason': 'Error message'}
-    """
+    """Analyzes the primary LLM's response using the Guard LLM via OpenRouter."""
     default_error_return = {'status': 'error', 'decision': 'ERROR', 'reason': 'Analysis failed'}
     if not client:
         logging.error("Guard LLM client not initialized. Cannot perform analysis.")
@@ -59,8 +45,7 @@ def analyze_response_with_guard(user_prompt: str, response_text: str) -> dict:
     logging.debug(f"User Prompt (L2 Input): '{user_prompt[:100]}...'")
     logging.debug(f"Primary Response (L2 Input): '{response_text[:100]}...'")
 
-    # REQ-L2-02: Construct prompt for Guard LLM using configured role and template
-    # IMPROVED: Includes user_prompt in the format call
+    # Construct prompt for Guard LLM using configured role and template
     try:
         analysis_prompt = config.GUARD_LLM_ANALYSIS_PROMPT_TEMPLATE.format(
             user_prompt=user_prompt, # Pass the user prompt
@@ -81,7 +66,7 @@ def analyze_response_with_guard(user_prompt: str, response_text: str) -> dict:
     ]
 
     try:
-        # REQ-L2-03: Call OpenRouter API using the standard method
+        # Call OpenRouter API using the standard method
         completion = client.chat.completions.create(
             model=config.GUARD_LLM_MODEL,
             messages=messages,
@@ -100,7 +85,7 @@ def analyze_response_with_guard(user_prompt: str, response_text: str) -> dict:
             logging.info(f"Guard LLM reasoning:- '{guard_reasoning_content}'")
         else:
             logging.info(f"Guard LLM reasoning:- NO REASONING")
-        # REQ-L2-04: Parse the structured JSON response
+        # Parse the structured JSON response
         guard_response_content = completion.choices[0].message.content.strip()
         logging.info(f"Guard LLM raw response content: '{guard_response_content}'")
 
@@ -112,7 +97,6 @@ def analyze_response_with_guard(user_prompt: str, response_text: str) -> dict:
             cleaned_content = cleaned_content[:-len("```")].strip() # Remove suffix and strip
 
 
-        # ... (JSON parsing and validation logic remains the same as the previous improved version) ...
         # Attempt to parse the JSON response
         try:
             analysis_result = json.loads(cleaned_content)
