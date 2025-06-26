@@ -6,7 +6,7 @@ import logging
 
 import layer1_filters
 import guard_llm_handler
-import config
+import src.config as config
 from demo_data import scenarios, prompt_to_response_map, label_to_prompt_map, get_simulated_reasoning
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - [%(name)s.%(funcName)s] - %(message)s')
@@ -210,6 +210,7 @@ with gr.Blocks(theme=theme, title="Argus AI Gateway Demo", css=".gradio-containe
 
         with gr.Column(scale=3):
             gr.Markdown("## Interaction Comparison")
+            gr.Markdown("For GuardLLM reasoning open terminal, next to \"running\" label, top left.")
             with gr.Row():
                 chatbot_no_Argus = gr.Chatbot(label="Without Argus Protection", height=700, show_copy_button=True, scale=1)
                 chatbot_with_Argus = gr.Chatbot(label="With Argus Protection", height=700, show_copy_button=True, scale=1)
@@ -240,5 +241,5 @@ with gr.Blocks(theme=theme, title="Argus AI Gateway Demo", css=".gradio-containe
 
 if __name__ == "__main__":
     logger.info("Launching Gradio interface...")
-    demo.launch(debug=True, share=True)
+    demo.launch(debug=True, share=False)
     logger.info("Gradio interface stopped.")

@@ -17,7 +17,7 @@ import logging
 import layer1_filters
 import primary_llm_mock
 import guard_llm_handler
-import config
+import src.config as config
 
 # Configure basic logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - [%(module)s] - %(message)s')

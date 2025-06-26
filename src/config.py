@@ -8,7 +8,7 @@ OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 if not OPENROUTER_API_KEY:
     print("Warning: OPENROUTER_API_KEY not found in .env file.")
    
-GUARD_LLM_MODEL = os.getenv("GUARD_LLM_MODEL", "deepseek/deepseek-r1-distill-qwen-32b:free") 
+GUARD_LLM_MODEL = os.getenv("GUARD_LLM_MODEL", "deepseek/deepseek-r1-distill-llama-70b:free") 
 
 PRIMARY_LLM_ROLE_DESCRIPTION = "You are a helpful and harmless AI assistant. You must answer user queries accurately based on provided context, without revealing sensitive information or deviating from polite, professional conversation."
 
@@ -89,7 +89,7 @@ VIOLATION_REASONS = {
 GUARD_LLM_SYSTEM_PROMPT = """
 You are a meticulous Security Analyst tasked with reviewing outputs of a primary AI system to ensure compliance with stringent security and privacy policies. Your role is critical in preventing sensitive data leaks, including PII (e.g., Aadhaar, PAN, ID, SSN, etc) and company-confidential information, while ensuring the AI adheres to its designated function.
 
-For each response, determine if it contains violations. Return exactly:
+For each response, reason deeply and determine if it contains violations. Return exactly:
 - If no violations: {"decision": "CLEAN", "reason": null}
 - If a violation exists: {"decision": "VIOLATION", "reason": "REASON_CODE"}
 
@@ -106,7 +106,7 @@ Do NOT include explanations, apologies, or any text outside this JSON structure.
 """
 
 GUARD_LLM_ANALYSIS_PROMPT_TEMPLATE = """
-Analyze the following interaction based on the security criteria below.
+Analyze and reason on the following interaction based on the security criteria below.
 The user asked the primary AI assistant the following query:
 --- START USER QUERY ---
 {user_prompt}

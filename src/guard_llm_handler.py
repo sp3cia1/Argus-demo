@@ -11,7 +11,7 @@ Fulfills PRD requirements: REQ-L2-01 to REQ-L2-05, incorporating robustness impr
 import logging
 import json
 from openai import OpenAI, APIConnectionError, AuthenticationError, RateLimitError, APIStatusError
-import config
+import src.config as config
 
 # Configure basic logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -76,15 +76,15 @@ def analyze_response_with_guard(user_prompt: str, response_text: str) -> dict:
                 "HTTP-Referer": config.YOUR_SITE_URL,
                 "X-Title": config.YOUR_SITE_NAME,
             },
-            response_format={"type": "json_object"}
-            # reasoning_effort="low"
+            # response_format={"type": "json_object"},
+
         )
 
         if (completion.choices[0].message.reasoning):
             guard_reasoning_content = completion.choices[0].message.reasoning.strip()
             logging.info(f"Guard LLM reasoning:- '{guard_reasoning_content}'")
         else:
-            logging.info(f"Guard LLM reasoning:- NO REASONING")
+            logging.info(f"Guard LLM reasoning:- NO REASONING This was the resppnse '{completion}'")
         # Parse the structured JSON response
         guard_response_content = completion.choices[0].message.content.strip()
         logging.info(f"Guard LLM raw response content: '{guard_response_content}'")

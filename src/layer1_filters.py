@@ -1,6 +1,6 @@
 import re
 import logging
-import config
+import src.config as config
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - [%(name)s.%(funcName)s] - %(message)s')
 logger = logging.getLogger(__name__)
