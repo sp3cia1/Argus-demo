@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  argus-gateway:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    ports:
+      - "7860:7860"
+      - "8000:8000"
+    environment:
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+      - GUARD_LLM_MODEL=${GUARD_LLM_MODEL:-deepseek/deepseek-r1-distill-qwen-32b:free}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    env_file:
+      - ../.env
+    volumes:
+      - ../logs:/app/logs
+    command: python src/argus/interfaces/web.py
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7860"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+  argus-cli:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    environment:
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+      - GUARD_LLM_MODEL=${GUARD_LLM_MODEL:-deepseek/deepseek-r1-distill-qwen-32b:free}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    env_file:
+      - ../.env
+    volumes:
+      - ../logs:/app/logs
+    command: python src/argus/interfaces/cli.py
+    profiles:
+      - cli

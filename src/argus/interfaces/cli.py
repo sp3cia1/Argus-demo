@@ -1,27 +1,24 @@
 """
-cli.py
-------
-Command-Line Interface for the Argus AI Gateway MVP.
-
-Handles user input, interacts with the ArgusGateway, and displays results.
-This is the main entry point for running the application.
-
-Fulfills PRD requirements: REQ-CLI-01, REQ-CLI-02, REQ-CLI-03, REQ-CLI-04, REQ-LOG-01
+Command-Line Interface for the Argus AI Gateway.
 """
 
 import logging
-from gateway import ArgusGateway
+from ..core.gateway import ArgusGateway
+from ..config.settings import settings
 
-log_level = logging.INFO
-logging.basicConfig(
-    level=log_level,
-    format='%(asctime)s - %(levelname)s - [%(name)s.%(funcName)s] - %(message)s',
-    datefmt='%Y-%m-%d %H:%M:%S'
-)
-logger = logging.getLogger(__name__)
+def setup_logging():
+    """Setup logging configuration."""
+    logging.basicConfig(
+        level=getattr(logging, settings.log_level.upper()),
+        format=settings.log_format,
+        datefmt='%Y-%m-%d %H:%M:%S'
+    )
 
 def main():
     """Main function to run the CLI application."""
+    setup_logging()
+    logger = logging.getLogger(__name__)
+    
     logger.info("Initializing Argus AI Gateway...")
     try:
         gateway = ArgusGateway()
@@ -56,8 +53,8 @@ def main():
             logger.info("KeyboardInterrupt received. Exiting.")
             break
         except EOFError:
-             logger.info("EOFError received. Exiting.")
-             break
+            logger.info("EOFError received. Exiting.")
+            break
         except Exception as e:
             logger.error(f"An unexpected error occurred in the main loop: {e}", exc_info=True)
             print(f"[Argus CLI] An unexpected error occurred: {e}")
